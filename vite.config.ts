@@ -19,6 +19,10 @@ export default defineConfig({
   },
   build: {
     target: 'es2022',
+    // Le module de notation dépasse forcément le seuil par défaut : il
+    // embarque la police musicale Bravura, incompressible et indispensable.
+    // Il est chargé à la demande, jamais sur l'écran d'accueil.
+    chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
         // Les bibliothèques audio et de notation sont lourdes : on les isole
