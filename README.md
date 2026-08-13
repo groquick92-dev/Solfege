@@ -133,10 +133,15 @@ L'application est publiée sur GitHub Pages à l'adresse
 Un push sur `main` déclenche le workflow `deploy.yml`, qui reconstruit et
 republie automatiquement. Rien à lancer à la main.
 
-### Mise en place
+### Mise en place initiale
 
-Rien à configurer à la main : le workflow active lui-même GitHub Pages au
-premier déploiement, via le paramètre `enablement` de `configure-pages`.
+Une seule fois, dans les réglages du dépôt : **Settings → Pages → Source**,
+choisir **GitHub Actions** (et non « Deploy from a branch »).
+
+Cette étape ne peut pas être automatisée. Créer un site Pages demande un droit
+d'administration que le jeton d'un workflow n'obtient jamais, même avec la
+permission `pages: write` — le paramètre `enablement` de `configure-pages`
+échoue donc sur `Resource not accessible by integration`.
 
 Le workflow copie `index.html` vers `404.html` avant publication. GitHub Pages
 ne connaît pas les routes de l'application : sans ce repli, ouvrir directement

@@ -39,11 +39,12 @@ jobs:
       - name: Ajouter le repli pour le routage
         run: cp dist/index.html dist/404.html
 
-      # `enablement` crée le site Pages s'il n'existe pas encore, plutôt que
-      # d'échouer en réclamant un passage manuel par les réglages du dépôt.
+      # Pages doit avoir été activé une fois à la main dans Settings → Pages,
+      # avec la source « GitHub Actions ». Le paramètre `enablement` de cette
+      # action ne peut pas s'en charger : créer un site Pages demande un droit
+      # d'administration que le jeton d'un workflow n'obtient jamais, même
+      # avec la permission `pages: write`.
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
