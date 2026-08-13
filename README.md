@@ -127,13 +127,36 @@ décourage.
 
 ## Déploiement
 
-Un push sur `main` déclenche le workflow `deploy.yml`, qui publie sur GitHub
-Pages. Il faut au préalable activer Pages sur le dépôt avec la source
-**GitHub Actions** (Settings → Pages).
+L'application est publiée sur GitHub Pages à l'adresse
+<https://groquick92-dev.github.io/Solfege/>.
 
-Le dépôt étant privé, GitHub Pages nécessite un plan payant. À défaut,
-n'importe quel hébergeur de fichiers statiques convient : `npm run build`
-produit un dossier `dist/` autonome.
+Un push sur `main` déclenche le workflow `deploy.yml`, qui reconstruit et
+republie automatiquement. Rien à lancer à la main.
+
+### Mise en place initiale
+
+Une seule fois, dans les réglages du dépôt : **Settings → Pages → Source**,
+choisir **GitHub Actions** (et non « Deploy from a branch »).
+
+Le workflow copie `index.html` vers `404.html` avant publication. GitHub Pages
+ne connaît pas les routes de l'application : sans ce repli, ouvrir directement
+`/cours` renverrait une erreur au lieu de laisser le routeur reprendre la main.
+
+### Autres hébergeurs
+
+`npm run build` produit un dossier `dist/` autonome, déposable chez n'importe
+quel hébergeur de fichiers statiques. Netlify et Vercel se connectent au dépôt
+en quelques clics et acceptent les dépôts privés, si la visibilité devait
+changer.
+
+### Sur l'usage au quotidien
+
+Une fois en ligne, l'adresse s'ajoute à l'écran d'accueil d'une tablette ou
+d'un téléphone comme une application : plus de terminal, plus de commande.
+
+Le dépôt est public, donc le code est visible de tous — mais l'activité de
+l'enfant, elle, ne l'est jamais. La progression ne quitte pas le navigateur et
+aucune donnée n'est transmise.
 
 ## Pistes de suite
 
