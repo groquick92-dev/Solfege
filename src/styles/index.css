@@ -1,0 +1,235 @@
+@import '@fontsource-variable/nunito';
+@import '@fontsource/baloo-2/400.css';
+@import '@fontsource/baloo-2/600.css';
+@import '@fontsource/baloo-2/700.css';
+@import '@fontsource/baloo-2/800.css';
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------------
+   Jetons de design
+   Palette pastel volontairement peu saturée : sur un écran regardé longtemps
+   par un enfant, les couleurs vives fatiguent et parasitent la lecture des
+   partitions. Le noir pur est également évité au profit d'un violet-ardoise
+   plus doux, qui reste très au-dessus du contraste AA sur fond crème.
+   ------------------------------------------------------------------------ */
+@theme {
+  /* Fonds */
+  --color-creme: #fffcf7;
+  --color-creme-fonce: #fff5e9;
+  --color-papier: #ffffff;
+
+  /* Menthe — couleur principale, associée à la réussite et à la validation */
+  --color-menthe-50: #eefaf6;
+  --color-menthe-100: #d3f2e8;
+  --color-menthe-200: #a8e5d3;
+  --color-menthe-300: #7ad6bd;
+  --color-menthe-400: #5cc9b0;
+  --color-menthe-500: #3fae95;
+  --color-menthe-600: #2f8c78;
+  --color-menthe-700: #256e5e;
+
+  /* Pêche — couleur d'appel à l'action et d'énergie */
+  --color-peche-50: #fff4ef;
+  --color-peche-100: #ffe4d8;
+  --color-peche-200: #ffc9b2;
+  --color-peche-300: #ffa98c;
+  --color-peche-400: #ff8f6b;
+  --color-peche-500: #f4714a;
+  --color-peche-600: #d4552f;
+  --color-peche-700: #a94324;
+
+  /* Lavande — théorie et cours */
+  --color-lavande-50: #f6f3fd;
+  --color-lavande-100: #ebe4fa;
+  --color-lavande-200: #d8ccf5;
+  --color-lavande-300: #c0adee;
+  --color-lavande-400: #b49be8;
+  --color-lavande-500: #9a7cdb;
+  --color-lavande-600: #7d5cc2;
+  --color-lavande-700: #63479b;
+
+  /* Ciel — écoute et oreille musicale */
+  --color-ciel-50: #eef8fc;
+  --color-ciel-100: #d5eef7;
+  --color-ciel-200: #aaddef;
+  --color-ciel-300: #7ec8e3;
+  --color-ciel-400: #5bb5d6;
+  --color-ciel-500: #3d99bd;
+  --color-ciel-600: #2d7999;
+
+  /* Soleil — récompenses, étoiles, série en cours */
+  --color-soleil-50: #fffaeb;
+  --color-soleil-100: #fff2cc;
+  --color-soleil-200: #ffe49a;
+  --color-soleil-300: #ffd166;
+  --color-soleil-400: #fbbf3f;
+  --color-soleil-500: #e5a41d;
+  --color-soleil-600: #bd8210;
+
+  /* Rose — rythme */
+  --color-rose-doux-100: #ffe6ef;
+  --color-rose-doux-200: #ffc9db;
+  --color-rose-doux-300: #ffa3c2;
+  --color-rose-doux-400: #f77fa8;
+  --color-rose-doux-500: #e05c8a;
+
+  /* Texte */
+  --color-encre: #4a4458;
+  --color-encre-clair: #6f6883;
+  --color-encre-pale: #9a93ad;
+
+  /* Typographie */
+  --font-titre: 'Baloo 2', 'Comic Sans MS', system-ui, sans-serif;
+  --font-texte: 'Nunito Variable', 'Nunito', system-ui, sans-serif;
+
+  /* Rayons généreux : tout est arrondi, rien ne « pique » */
+  --radius-doux: 0.875rem;
+  --radius-bulle: 1.5rem;
+  --radius-galet: 2rem;
+
+  /* Ombres colorées plutôt que grises, pour garder la douceur */
+  --shadow-douce: 0 2px 8px rgb(74 68 88 / 0.06), 0 8px 24px rgb(74 68 88 / 0.06);
+  --shadow-relief: 0 4px 0 0 rgb(74 68 88 / 0.12);
+
+  /* Animations */
+  --animate-apparition: apparition 0.35s ease-out;
+  --animate-rebond-doux: rebond-doux 0.5s ease-out;
+  --animate-pulsation: pulsation 2s ease-in-out infinite;
+  --animate-tremblement: tremblement 0.4s ease-in-out;
+  --animate-etoile: etoile 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes apparition {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rebond-doux {
+  0% {
+    transform: scale(0.9);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulsation {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+@keyframes tremblement {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes etoile {
+  0% {
+    transform: scale(0) rotate(-120deg);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
+/* ------------------------------------------------------------------------
+   Base
+   ------------------------------------------------------------------------ */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-creme);
+    color: var(--color-encre);
+    font-family: var(--font-texte);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    /* Un enfant tape vite et fort : on neutralise le zoom accidentel et la
+       sélection de texte parasite pendant les exercices. */
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-titre);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  /* Cible de saisie toujours confortable pour un doigt de 8 ans. */
+  button,
+  [role='button'] {
+    min-height: 2.75rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-lavande-400);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: var(--color-menthe-200);
+  }
+}
+
+@layer utilities {
+  /* Empêche la sélection pendant les exercices au clavier ou à la souris. */
+  .sans-selection {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .ombre-douce {
+    box-shadow: var(--shadow-douce);
+  }
+}
+
+/* ------------------------------------------------------------------------
+   Accessibilité — respecte le réglage système « moins d'animations »
+   ------------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

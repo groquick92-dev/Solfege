@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Note de musique">
+  <rect width="64" height="64" rx="14" fill="#5cc9b0" />
+  <!-- Une croche stylisée, reprise des couleurs de l'application. -->
+  <path
+    d="M26 14v26.5a9 9 0 1 0 5 8V24c6.5 1.5 10.5 5 11 10.5 3-3.5 3.5-9-1-14C37 16.5 31 15 26 14z"
+    fill="#fffcf7"
+  />
+</svg>
