@@ -30,12 +30,13 @@ de notes, les silences, la mesure, les altérations, la gamme de do majeur, les
 intervalles, les nuances et le tempo. Chaque leçon comporte des portées
 gravées et des exemples à écouter.
 
-**Six familles d'exercices**, chacune découpée en paliers qui se débloquent au
-fur et à mesure :
+**Sept familles d'exercices**, chacune découpée en paliers qui se débloquent
+au fur et à mesure :
 
 - **Lecture en clé de sol** — cinq paliers, de trois notes à l'ambitus élargi
 - **Lecture en clé de fa** — quatre paliers
 - **Rythme** — écoute puis frappe, avec décompte et évaluation de la précision
+- **Dictée rythmique** — écouter une mesure et l'écrire avec les figures
 - **Oreille** — reconnaissance d'intervalles, cinq paliers
 - **Dictée mélodique** — reconstituer une mélodie entendue
 - **Chant** — reproduire une note à la voix, avec retour de justesse en direct
@@ -45,6 +46,37 @@ clavier de l'ordinateur.
 
 **Une progression** : étoiles par activité, dix badges, série quotidienne,
 avatar, et export du profil en JSON.
+
+### Répétition adaptative
+
+Le tirage des questions est pondéré par les résultats passés, note par note et
+intervalle par intervalle. Une note qui résiste revient jusqu'à sept fois plus
+souvent qu'une note acquise ; une note maîtrisée continue d'apparaître, sans
+quoi elle finirait par être oubliée.
+
+Le profil de difficulté est figé au démarrage d'une série : laisser la
+difficulté dériver au milieu d'un exercice est déroutant, l'adaptation
+s'applique donc à la série suivante.
+
+### Revue des erreurs
+
+À la fin de chaque série, les questions ratées sont réaffichées sur portée
+avec la bonne réponse — regroupées quand la même difficulté revient
+(« raté 4 fois »). Un bouton **Rejouer mes erreurs** relance une série courte
+composée uniquement de celles-ci.
+
+Cette reprise ne rapporte pas d'étoiles et n'écrase pas le résultat de
+l'activité : elle sert à réparer, pas à noter.
+
+### Espace parent
+
+Accessible depuis le bas du profil, volontairement hors du parcours de
+l'enfant : temps de pratique, points faibles classés du plus fragile au moins
+fragile, réussite par module, et trois conseils déduits de l'état réel de la
+progression.
+
+Un élément n'y apparaît comme point faible qu'après trois rencontres au moins
+— une note vue une seule fois et ratée ne veut statistiquement rien dire.
 
 ## Choix techniques
 
@@ -106,24 +138,49 @@ d'un enfant. Le micro est analysé sur l'appareil et rien n'en sort.
 La contrepartie est que la progression est liée à un navigateur — d'où l'export
 et l'import de profil dans l'écran « Moi ».
 
+Le détail des réponses est écrit une seule fois par série, pas à chaque
+question : sur une tablette d'entrée de gamme, écrire dans le stockage local à
+chaque clic se sent immédiatement.
+
+### Hors-ligne
+
+L'application est installable et fonctionne sans réseau. Le service worker
+précache les fichiers du site, et les échantillons du piano sont conservés
+dans le cache du navigateur — sans quoi ils se retéléchargeraient à chaque
+session, ce qui rend l'application inutilisable sur une connexion capricieuse.
+
+Sur tablette ou téléphone, « Ajouter à l'écran d'accueil » l'ouvre en plein
+écran, sans barre de navigateur.
+
 ## Organisation du code
 
 ```
 src/
 ├── audio/        Contexte, instruments, lecture, métronome, micro
 ├── music/        Théorie, rythme, générateurs d'exercices  (testé)
-├── notation/     Rendu des portées avec VexFlow
+├── notation/     Rendu des portées avec VexFlow            (testé)
 ├── content/      Programme et cours de théorie
-├── exercices/    Ossature commune aux séries d'exercices
+├── exercices/    Ossature commune aux séries d'exercices   (testé)
 ├── store/        Progression et réglages                   (testé)
-├── ui/           Composants du design system
+├── ui/           Composants du design system               (testé)
 └── pages/        Écrans
 ```
 
-Le noyau musical et le magasin de progression sont couverts par 75 tests. Ce
-sont les deux endroits où une erreur est à la fois invisible et grave : une
-note mal convertie enseigne quelque chose de faux, une série mal comptée
-décourage.
+**144 tests.** Ils couvrent en priorité les endroits où une erreur est à la
+fois invisible et grave : une note mal convertie enseigne quelque chose de
+faux, une série mal comptée décourage, un badge décerné trop tôt fabrique un
+faux signal de maîtrise.
+
+Deux garanties méritent d'être signalées, parce qu'elles ont chacune rattrapé
+un vrai défaut :
+
+- la palette de la dictée rythmique est **dérivée** des cellules que le
+  générateur peut produire, et un test le vérifie sur 600 tirages. Codée à la
+  main, elle omettait la ronde : l'enfant entendait une figure qu'il n'avait
+  aucun moyen d'écrire ;
+- le badge « As de la clé de sol » se mesure sur la liste des activités du
+  programme, jamais sur celles déjà jouées — sans quoi il tombait dès la
+  première activité réussie.
 
 ## Déploiement
 
@@ -165,8 +222,8 @@ aucune donnée n'est transmise.
 
 ## Pistes de suite
 
-- Dictée rythmique — écrire le rythme entendu, et non plus seulement le frapper
 - Lecture de notes chronométrée, avec record personnel
 - Chant d'intervalles et de courtes mélodies, pas seulement de notes isolées
-- Mode hors-ligne complet, en mettant les échantillons du piano en cache
-- Écran parent : temps passé, points faibles, activités conseillées
+- Dictée à deux voix, en clé de sol et clé de fa simultanément
+- Reconnaissance d'accords majeurs et mineurs à l'oreille
+- Export du bilan parent en PDF, à montrer au professeur

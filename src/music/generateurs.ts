@@ -52,6 +52,35 @@ export function choisir<T>(tableau: readonly T[], alea: Alea = Math.random): T {
   return tableau[Math.floor(alea() * tableau.length)]!
 }
 
+/**
+ * Tire un élément en tenant compte de son poids.
+ *
+ * C'est le cœur de la répétition adaptative : un poids double signifie deux
+ * fois plus de chances d'être tiré. Les poids nuls ou négatifs sont ramenés à
+ * zéro, et si tous sont nuls le tirage redevient uniforme plutôt que
+ * d'échouer.
+ */
+export function choisirPondere<T>(
+  elements: readonly T[],
+  poids: (element: T) => number,
+  alea: Alea = Math.random,
+): T {
+  if (elements.length === 0) throw new Error('Tirage dans un tableau vide')
+
+  const valeurs = elements.map((e) => Math.max(0, poids(e)))
+  const total = valeurs.reduce((somme, p) => somme + p, 0)
+  if (total <= 0) return choisir(elements, alea)
+
+  let seuil = alea() * total
+  for (let i = 0; i < elements.length; i++) {
+    seuil -= valeurs[i]!
+    if (seuil < 0) return elements[i]!
+  }
+
+  // Filet contre les imprécisions d'arrondi en virgule flottante.
+  return elements[elements.length - 1]!
+}
+
 /** Tire un entier dans l'intervalle fermé [min, max]. */
 export function entierEntre(min: number, max: number, alea: Alea = Math.random): number {
   return min + Math.floor(alea() * (max - min + 1))
@@ -110,16 +139,25 @@ export interface QuestionLecture {
   reponse: string
 }
 
+/**
+ * Poids de tirage d'une note, fourni par le suivi de maîtrise.
+ *
+ * Injecté plutôt que lu directement depuis le magasin : le générateur reste
+ * une fonction pure, testable sans monter tout l'état de l'application.
+ */
+export type PoidsParMidi = (midi: number) => number
+
 /** Tire une note à identifier, avec ses propositions de réponse. */
 export function genererLectureNote(
   palier: number,
   cle: Cle,
   alea: Alea = Math.random,
   nbPropositions = 4,
+  poids?: PoidsParMidi,
 ): QuestionLecture {
   const paliers = PALIERS_LECTURE[cle]
   const notes = paliers[Math.min(palier, paliers.length - 1)]!
-  const midi = choisir(notes, alea)
+  const midi = poids ? choisirPondere(notes, poids, alea) : choisir(notes, alea)
   const note = midiVersNote(midi)
 
   // Les distracteurs sont pris dans le même palier : proposer une note que
@@ -167,14 +205,20 @@ export const PALIERS_INTERVALLES: string[][] = [
   ['seconde', 'tierce', 'quarte', 'quinte', 'sixte', 'septième', 'octave'],
 ]
 
+/** Poids de tirage d'un intervalle, fourni par le suivi de maîtrise. */
+export type PoidsParIntervalle = (nom: string) => number
+
 export function genererIntervalle(
   palier: number,
   alea: Alea = Math.random,
   sensAutorise: 'montant' | 'les-deux' = 'montant',
+  poids?: PoidsParIntervalle,
 ): QuestionIntervalle {
   const nomsPalier = PALIERS_INTERVALLES[Math.min(palier, PALIERS_INTERVALLES.length - 1)]!
   const disponibles = INTERVALLES.filter((i) => nomsPalier.includes(i.nom))
-  const intervalle = choisir(disponibles, alea)
+  const intervalle = poids
+    ? choisirPondere(disponibles, (i) => poids(i.nom), alea)
+    : choisir(disponibles, alea)
 
   const sens = sensAutorise === 'montant' ? 'montant' : alea() < 0.5 ? 'montant' : 'descendant'
 

@@ -7,6 +7,7 @@
  */
 
 import { useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { BADGES, useProgression, useTotalEtoiles } from '../store/progression'
 import { COURS } from '../content/cours'
 import { TOUTES_ACTIVITES } from '../content/programme'
@@ -244,6 +245,14 @@ export default function Profil() {
       <div className="mt-6 text-center">
         <Etoiles nombre={Math.min(3, Math.ceil(totalEtoiles / 10))} />
       </div>
+
+      {/* Discret et en bas de page : cet écran s'adresse aux parents, pas à
+          l'enfant, et n'a rien à faire dans la barre de navigation. */}
+      <p className="mt-8 text-center">
+        <Link to="/parents" className="text-encre-pale hover:text-encre-clair underline text-sm">
+          👋 Espace parent — suivi détaillé
+        </Link>
+      </p>
     </Page>
   )
 }

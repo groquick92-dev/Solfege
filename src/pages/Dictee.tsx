@@ -13,7 +13,7 @@ import { Bouton, BoutonReponse } from '../ui/Bouton'
 import { Carte } from '../ui/Carte'
 import { Retour } from '../ui/Retour'
 import { Portee, type NoteAffichee } from '../notation/Portee'
-import { type QuestionMelodie, genererMelodie } from '../music/generateurs'
+import { genererMelodie } from '../music/generateurs'
 import { jouerMelodie, jouerNote } from '../audio/lecture'
 import { midiVersNote, nomFrancais } from '../music/theory'
 
@@ -25,10 +25,10 @@ export default function Dictee() {
   const palier = Number.parseInt(palierParam ?? '0', 10) || 0
   const longueur = palier === 0 ? 3 : palier === 1 ? 5 : 6
 
-  const serie = useSerie(`dictee-${palier}`, DICTEES_PAR_SERIE)
-  const [question, setQuestion] = useState<QuestionMelodie>(() =>
-    genererMelodie(longueur, palier),
-  )
+  const generer = useCallback(() => genererMelodie(longueur, palier), [longueur, palier])
+  const serie = useSerie(`dictee-${palier}`, DICTEES_PAR_SERIE, generer)
+
+  const question = serie.question
   const [saisie, setSaisie] = useState<number[]>([])
   const [validee, setValidee] = useState(false)
   const [ecoute, setEcoute] = useState(false)
@@ -40,12 +40,11 @@ export default function Dictee() {
   }, [])
 
   useEffect(() => {
-    const suivante = genererMelodie(longueur, palier)
-    setQuestion(suivante)
     setSaisie([])
     setValidee(false)
-    void jouer(suivante.notes)
-  }, [serie.indice, longueur, palier, jouer])
+    if (!serie.terminee) void jouer(question.notes)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serie.indice, serie.terminee])
 
   const ajouter = (midi: number) => {
     if (validee || saisie.length >= question.notes.length) return
@@ -62,23 +61,29 @@ export default function Dictee() {
     setValidee(true)
     const justes = saisie.filter((midi, i) => midi === question.notes[i]).length
     const part = justes / question.notes.length
+
     // La dictée est notée en proportion : retrouver quatre notes sur cinq est
     // un vrai résultat, qu'un tout-ou-rien effacerait.
-    window.setTimeout(() => serie.repondrePartiel(part), 3000)
+    window.setTimeout(
+      () =>
+        serie.repondrePartiel(part, {
+          attendue: question.notes.map((m) => nomFrancais(midiVersNote(m))).join(' '),
+          donnee: saisie.map((m) => nomFrancais(midiVersNote(m))).join(' '),
+          notes: question.notes,
+        }),
+      3000,
+    )
   }
 
   const complete = saisie.length === question.notes.length
   const toutJuste = validee && saisie.every((midi, i) => midi === question.notes[i])
 
   const notesAffichees: NoteAffichee[] = validee
-    ? question.notes.map((midi, i) => ({
-        midi,
-        couleur: saisie[i] === midi ? 'juste' : 'faux',
-      }))
+    ? question.notes.map((midi, i) => ({ midi, couleur: saisie[i] === midi ? 'juste' : 'faux' }))
     : saisie.map((midi) => ({ midi, couleur: 'neutre' }))
 
   return (
-    <CadreExercice titre="La dictée" emoji="✏️" serie={serie} total={DICTEES_PAR_SERIE}>
+    <CadreExercice titre="La dictée" emoji="✏️" serie={serie}>
       <Carte teinte="peche" className="mb-5 text-center">
         <p className="text-encre-clair mb-3">
           Écoute la mélodie, puis retrouve les {question.notes.length} notes.

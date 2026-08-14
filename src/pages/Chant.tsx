@@ -30,8 +30,10 @@ const NOTES_PAR_SERIE = 5
 const DUREE_TENUE = 1200
 
 export default function Chant() {
-  const serie = useSerie('chant-0', NOTES_PAR_SERIE)
-  const [cible, setCible] = useState(() => choisir(NOTES_CIBLES))
+  const generer = useCallback(() => choisir(NOTES_CIBLES), [])
+  const serie = useSerie('chant-0', NOTES_PAR_SERIE, generer)
+
+  const cible = serie.question
   const [mesure, setMesure] = useState<MesureHauteur | null>(null)
   const [ecouteActive, setEcouteActive] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
@@ -47,10 +49,9 @@ export default function Chant() {
   }, [])
 
   useEffect(() => {
-    setCible(choisir(NOTES_CIBLES))
     setReussi(false)
     debutJusteRef.current = null
-  }, [serie.indice])
+  }, [serie.indice, serie.terminee])
 
   const surMesure = useCallback(
     (nouvelle: MesureHauteur) => {
@@ -103,7 +104,7 @@ export default function Chant() {
   }
 
   return (
-    <CadreExercice titre="Le chant" emoji="🎤" serie={serie} total={NOTES_PAR_SERIE}>
+    <CadreExercice titre="Le chant" emoji="🎤" serie={serie}>
       <Carte teinte="peche" className="mb-5 text-center">
         <p className="text-encre-clair mb-2">Écoute cette note, puis chante-la !</p>
         <Portee notes={[{ midi: cible, couleur: 'cible' }]} hauteur={150} />

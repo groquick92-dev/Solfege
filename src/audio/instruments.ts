@@ -11,7 +11,7 @@
  * besoin réel de son, et sa progression est exposée pour l'afficher.
  */
 
-import { SplendidGrandPiano } from 'smplr'
+import { CacheStorage, SplendidGrandPiano } from 'smplr'
 import { obtenirContexte, sortieInstruments } from './contexte'
 
 export interface EtatChargement {
@@ -57,6 +57,11 @@ export function chargerPiano(): Promise<Instrument> {
     const instrument = SplendidGrandPiano(contexte, {
       destination: sortieInstruments(),
       volume: 100,
+      // Les échantillons sont conservés dans le cache du navigateur : sans
+      // cela ils se retéléchargent à chaque session, ce qui rend
+      // l'application inutilisable sur une connexion capricieuse — et
+      // impossible hors-ligne.
+      storage: new CacheStorage('solfege-piano'),
       onLoadProgress: (progres) => {
         const total = progres.total || 1
         etat.progression = Math.min(1, progres.loaded / total)

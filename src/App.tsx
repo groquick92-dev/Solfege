@@ -11,11 +11,13 @@ const ListeCours = lazy(() => import('./pages/ListeCours'))
 const PageCours = lazy(() => import('./pages/PageCours'))
 const LectureNotes = lazy(() => import('./pages/LectureNotes'))
 const Rythme = lazy(() => import('./pages/Rythme'))
+const DicteeRythme = lazy(() => import('./pages/DicteeRythme'))
 const Oreille = lazy(() => import('./pages/Oreille'))
 const Dictee = lazy(() => import('./pages/Dictee'))
 const Chant = lazy(() => import('./pages/Chant'))
 const Piano = lazy(() => import('./pages/Piano'))
 const Profil = lazy(() => import('./pages/Profil'))
+const Parents = lazy(() => import('./pages/Parents'))
 
 function Chargement() {
   return (
@@ -48,11 +50,13 @@ export default function App() {
           <Route path="/cours/:id" element={<PageCours />} />
           <Route path="/lecture/:cle/:palier" element={<LectureNotes />} />
           <Route path="/rythme/:niveau" element={<Rythme />} />
+          <Route path="/dictee-rythme/:niveau" element={<DicteeRythme />} />
           <Route path="/oreille/:palier" element={<Oreille />} />
           <Route path="/dictee/:palier" element={<Dictee />} />
           <Route path="/chant" element={<Chant />} />
           <Route path="/piano" element={<Piano />} />
           <Route path="/profil" element={<Profil />} />
+          <Route path="/parents" element={<Parents />} />
           <Route path="*" element={<Accueil />} />
         </Routes>
       </Suspense>

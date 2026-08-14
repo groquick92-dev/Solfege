@@ -3,6 +3,7 @@ import {
   PALIERS_INTERVALLES,
   PALIERS_LECTURE,
   aleaAvecGraine,
+  choisirPondere,
   entierEntre,
   evaluerFrappes,
   genererIntervalle,
@@ -12,7 +13,14 @@ import {
   melanger,
   scoreFrappes,
 } from './generateurs'
-import { MESURES, developperCellules, frappes, tempsParMesure } from './rythme'
+import {
+  MESURES,
+  developperCellules,
+  figuresJusquAu,
+  frappes,
+  tempsParMesure,
+  valeur,
+} from './rythme'
 
 describe('tirage aléatoire', () => {
   it('rend la même série pour une même graine', () => {
@@ -44,6 +52,98 @@ describe('tirage aléatoire', () => {
     const melange = melanger(source, aleaAvecGraine(9))
     expect([...melange].sort((a, b) => a - b)).toEqual(source)
     expect(source).toEqual([1, 2, 3, 4, 5, 6]) // l'original n'est pas modifié
+  })
+})
+
+describe('tirage pondéré', () => {
+  /** Compte les occurrences sur un grand nombre de tirages. */
+  function compter<T>(elements: readonly T[], poids: (e: T) => number, tirages = 4000) {
+    const alea = aleaAvecGraine(1234)
+    const comptes = new Map<T, number>()
+    for (let i = 0; i < tirages; i++) {
+      const tire = choisirPondere(elements, poids, alea)
+      comptes.set(tire, (comptes.get(tire) ?? 0) + 1)
+    }
+    return comptes
+  }
+
+  it('tire un poids double environ deux fois plus souvent', () => {
+    const comptes = compter(['a', 'b'], (e) => (e === 'a' ? 2 : 1))
+    const rapport = comptes.get('a')! / comptes.get('b')!
+    expect(rapport).toBeGreaterThan(1.8)
+    expect(rapport).toBeLessThan(2.2)
+  })
+
+  it('ne tire jamais un élément de poids nul', () => {
+    const comptes = compter(['a', 'b'], (e) => (e === 'a' ? 1 : 0))
+    expect(comptes.get('b')).toBeUndefined()
+    expect(comptes.get('a')).toBe(4000)
+  })
+
+  it('traite un poids négatif comme nul', () => {
+    const comptes = compter(['a', 'b'], (e) => (e === 'a' ? 1 : -5))
+    expect(comptes.get('b')).toBeUndefined()
+  })
+
+  it('redevient uniforme si tous les poids sont nuls', () => {
+    // Sans ce garde-fou, la somme nulle rendrait le tirage impossible.
+    const comptes = compter(['a', 'b'], () => 0)
+    expect(comptes.get('a')).toBeGreaterThan(0)
+    expect(comptes.get('b')).toBeGreaterThan(0)
+  })
+
+  it('refuse un tableau vide', () => {
+    expect(() => choisirPondere([], () => 1)).toThrow()
+  })
+
+  it('rend toujours un élément de la liste', () => {
+    const alea = aleaAvecGraine(77)
+    const source = [10, 20, 30]
+    for (let i = 0; i < 200; i++) {
+      expect(source).toContain(choisirPondere(source, (n) => n / 10, alea))
+    }
+  })
+})
+
+describe('lecture de notes adaptative', () => {
+  it('privilégie les notes de poids élevé', () => {
+    const alea = aleaAvecGraine(99)
+    const faible = 64 // la note à retravailler
+    const comptes = new Map<number, number>()
+
+    for (let i = 0; i < 1500; i++) {
+      const q = genererLectureNote(2, 'sol', alea, 4, (midi) => (midi === faible ? 10 : 1))
+      comptes.set(q.midi, (comptes.get(q.midi) ?? 0) + 1)
+    }
+
+    const autres = [...comptes.entries()].filter(([m]) => m !== faible)
+    for (const [, compte] of autres) {
+      expect(comptes.get(faible)!).toBeGreaterThan(compte)
+    }
+  })
+
+  it('reste correct sans fonction de poids', () => {
+    const alea = aleaAvecGraine(100)
+    for (let i = 0; i < 30; i++) {
+      const q = genererLectureNote(2, 'sol', alea)
+      expect(PALIERS_LECTURE.sol[2]).toContain(q.midi)
+      expect(q.propositions).toContain(q.reponse)
+    }
+  })
+
+  it('privilégie les intervalles de poids élevé', () => {
+    const alea = aleaAvecGraine(101)
+    const comptes = new Map<string, number>()
+
+    for (let i = 0; i < 1500; i++) {
+      const q = genererIntervalle(4, alea, 'montant', (nom) => (nom === 'quarte' ? 10 : 1))
+      comptes.set(q.intervalle.nom, (comptes.get(q.intervalle.nom) ?? 0) + 1)
+    }
+
+    const autres = [...comptes.entries()].filter(([n]) => n !== 'quarte')
+    for (const [, compte] of autres) {
+      expect(comptes.get('quarte')!).toBeGreaterThan(compte)
+    }
   })
 })
 
@@ -195,6 +295,40 @@ describe('rythme', () => {
       { id: 'x', valeurs: ['noire', 'silence:noire', 'noire'], temps: 3, niveau: 1, parle: '' },
     ])
     expect(frappes(evenements)).toEqual([0, 2])
+  })
+})
+
+describe('palette de la dictée rythmique', () => {
+  it('couvre toutes les figures que le générateur peut produire', () => {
+    // Sans cette garantie, l'enfant entend une figure qu'il n'a aucun moyen
+    // d'écrire — c'était le cas de la ronde aux niveaux 2 et 3.
+    const alea = aleaAvecGraine(555)
+
+    for (const niveau of [1, 2, 3] as const) {
+      const palette = new Set(figuresJusquAu(niveau))
+
+      for (let i = 0; i < 200; i++) {
+        for (const evenement of genererRythme(1, niveau, '4/4', alea).evenements) {
+          expect(palette).toContain(evenement.valeurId)
+        }
+      }
+    }
+  })
+
+  it('classe les figures de la plus longue à la plus courte', () => {
+    const figures = figuresJusquAu(3)
+    const durees = figures.map((id) => valeur(id.replace('silence:', '')).temps)
+    expect(durees).toEqual([...durees].sort((a, b) => b - a))
+  })
+
+  it('s’enrichit avec le niveau', () => {
+    expect(figuresJusquAu(1).length).toBeLessThan(figuresJusquAu(3).length)
+  })
+
+  it('inclut la ronde dès le niveau 1 et la conserve ensuite', () => {
+    for (const niveau of [1, 2, 3] as const) {
+      expect(figuresJusquAu(niveau)).toContain('ronde')
+    }
   })
 })
 

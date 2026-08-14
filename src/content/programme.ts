@@ -11,7 +11,14 @@
  * dimanche.
  */
 
-import type { TeinteCarte } from '../ui/Carte'
+/**
+ * Teintes disponibles pour un module.
+ *
+ * Le type est déclaré ici plutôt qu'importé des composants : le programme est
+ * de la donnée pure, et le magasin de progression a besoin de le lire sans
+ * traîner React derrière lui.
+ */
+export type TeinteModule = 'menthe' | 'peche' | 'lavande' | 'ciel' | 'soleil' | 'rose' | 'blanc'
 
 export interface Activite {
   id: string
@@ -30,7 +37,7 @@ export interface Module {
   titre: string
   sousTitre: string
   emoji: string
-  teinte: TeinteCarte
+  teinte: TeinteModule
   activites: Activite[]
 }
 
@@ -160,6 +167,30 @@ export const MODULES: readonly Module[] = [
         chemin: '/rythme/3',
         palier: 3,
         requiert: ['rythme-1'],
+      },
+      {
+        id: 'dictee-rythme-1',
+        titre: 'Écrire un rythme',
+        description: 'Écoute une mesure, puis note-la avec les figures.',
+        chemin: '/dictee-rythme/1',
+        palier: 1,
+        requiert: ['rythme-0'],
+      },
+      {
+        id: 'dictee-rythme-2',
+        titre: 'Écrire les croches',
+        description: 'La dictée se corse : deux notes par temps.',
+        chemin: '/dictee-rythme/2',
+        palier: 2,
+        requiert: ['dictee-rythme-1'],
+      },
+      {
+        id: 'dictee-rythme-3',
+        titre: 'Écrire les pointés',
+        description: 'Points, doubles-croches : tout le vocabulaire.',
+        chemin: '/dictee-rythme/3',
+        palier: 3,
+        requiert: ['dictee-rythme-2'],
       },
     ],
   },

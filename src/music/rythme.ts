@@ -113,6 +113,25 @@ export function cellulesJusquAu(niveau: 1 | 2 | 3): Cellule[] {
   return CELLULES.filter((c) => c.niveau <= niveau)
 }
 
+/**
+ * Figures pouvant apparaître à un niveau donné, de la plus longue à la plus
+ * courte.
+ *
+ * Dérivée des cellules plutôt que fixée à la main : une palette de saisie
+ * écrite séparément finit toujours par diverger du générateur, et l'enfant se
+ * retrouve à entendre une figure qu'il n'a aucun moyen d'écrire.
+ */
+export function figuresJusquAu(niveau: 1 | 2 | 3): string[] {
+  const vues = new Set<string>()
+  for (const cellule of cellulesJusquAu(niveau)) {
+    for (const id of cellule.valeurs) vues.add(id)
+  }
+
+  return [...vues].sort(
+    (a, b) => valeur(b.replace('silence:', '')).temps - valeur(a.replace('silence:', '')).temps,
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Événements rythmiques
 // ---------------------------------------------------------------------------

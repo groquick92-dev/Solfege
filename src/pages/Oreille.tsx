@@ -9,20 +9,31 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { CadreExercice, useSerie } from '../exercices/CadreExercice'
-import { BoutonReponse, Bouton } from '../ui/Bouton'
+import { usePoidsIntervalles } from '../exercices/useAdaptatif'
+import { Bouton, BoutonReponse } from '../ui/Bouton'
 import { Carte } from '../ui/Carte'
 import { Retour } from '../ui/Retour'
 import { Portee } from '../notation/Portee'
 import { type QuestionIntervalle, genererIntervalle } from '../music/generateurs'
 import { jouerIntervalle } from '../audio/lecture'
 import { QUESTIONS_PAR_SERIE } from '../content/programme'
+import { cleIntervalle } from '../store/progression'
 
 export default function Oreille() {
   const { palier: palierParam } = useParams()
   const palier = Number.parseInt(palierParam ?? '0', 10) || 0
 
-  const serie = useSerie(`intervalles-${palier}`, QUESTIONS_PAR_SERIE)
-  const [question, setQuestion] = useState<QuestionIntervalle>(() => genererIntervalle(palier))
+  const poids = usePoidsIntervalles()
+  const generer = useCallback(
+    () => genererIntervalle(palier, Math.random, 'montant', poids),
+    [palier, poids],
+  )
+
+  const serie = useSerie(`intervalles-${palier}`, QUESTIONS_PAR_SERIE, generer, {
+    cleMaitrise: (question) => cleIntervalle(question.intervalle.nom),
+  })
+
+  const question = serie.question
   const [choix, setChoix] = useState<string | null>(null)
   const [ecoute, setEcoute] = useState(false)
 
@@ -33,25 +44,35 @@ export default function Oreille() {
   }, [])
 
   useEffect(() => {
-    const suivante = genererIntervalle(palier)
-    setQuestion(suivante)
     setChoix(null)
     // La première écoute est déclenchée automatiquement : c'est la consigne
     // même de l'exercice, l'enfant n'a pas à la demander.
-    void jouer(suivante)
-  }, [serie.indice, palier, jouer])
+    if (!serie.terminee) void jouer(question)
+    // Rejouer à chaque changement de question, jamais à chaque rendu.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serie.indice, serie.terminee])
 
   const repondre = (nom: string) => {
     if (choix !== null) return
     setChoix(nom)
     const juste = nom === question.intervalle.nom
-    window.setTimeout(() => serie.repondre(juste), juste ? 1000 : 2400)
+
+    window.setTimeout(
+      () =>
+        serie.repondre(juste, {
+          attendue: question.intervalle.nom,
+          donnee: nom,
+          notes: [question.depart, question.arrivee],
+          repere: question.intervalle.repere,
+        }),
+      juste ? 1000 : 2400,
+    )
   }
 
   const juste = choix === question.intervalle.nom
 
   return (
-    <CadreExercice titre="L’oreille" emoji="👂" serie={serie} total={QUESTIONS_PAR_SERIE}>
+    <CadreExercice titre="L’oreille" emoji="👂" serie={serie}>
       <Carte teinte="soleil" className="mb-5 text-center">
         <p className="text-encre-clair mb-3">Quel est cet intervalle ?</p>
         <Bouton

@@ -14,7 +14,7 @@ import { Bouton } from '../ui/Bouton'
 import { Carte } from '../ui/Carte'
 import { Retour } from '../ui/Retour'
 import { Portee } from '../notation/Portee'
-import { type QuestionRythme, evaluerFrappes, genererRythme, scoreFrappes } from '../music/generateurs'
+import { evaluerFrappes, genererRythme, scoreFrappes } from '../music/generateurs'
 import { frappes } from '../music/rythme'
 import { jouerFrappe, jouerRythme } from '../audio/lecture'
 import { decompte } from '../audio/metronome'
@@ -30,10 +30,12 @@ export default function Rythme() {
   const { niveau: niveauParam } = useParams()
   const niveau = (Math.min(3, Math.max(1, Number.parseInt(niveauParam ?? '1', 10) || 1)) as 1 | 2 | 3)
 
-  const serie = useSerie(`rythme-${niveau - 1}`, RYTHMES_PAR_SERIE)
   const tempo = useProgression((etat) => etat.reglages.tempo)
 
-  const [question, setQuestion] = useState<QuestionRythme>(() => genererRythme(2, niveau))
+  const generer = useCallback(() => genererRythme(2, niveau), [niveau])
+  const serie = useSerie(`rythme-${niveau - 1}`, RYTHMES_PAR_SERIE, generer)
+
+  const question = serie.question
   const [phase, setPhase] = useState<Phase>('attente')
   const [score, setScore] = useState(0)
 
@@ -43,10 +45,9 @@ export default function Rythme() {
   const frappesRef = useRef<number[]>([])
 
   useEffect(() => {
-    setQuestion(genererRythme(2, niveau))
     setPhase('attente')
     frappesRef.current = []
-  }, [serie.indice, niveau])
+  }, [serie.indice, serie.terminee])
 
   const ecouter = useCallback(async () => {
     setPhase('ecoute')
@@ -75,7 +76,13 @@ export default function Rythme() {
       const obtenu = scoreFrappes(resultats)
       setScore(obtenu)
       setPhase('bilan')
-      window.setTimeout(() => serie.repondrePartiel(obtenu / 100), 2600)
+      window.setTimeout(
+        () =>
+          serie.repondrePartiel(obtenu / 100, {
+            attendue: `${question.cellules.map((c) => c.parle).join(' ')} — précision ${obtenu} %`,
+          }),
+        2600,
+      )
     }, duree)
   }, [question, tempo, serie])
 
@@ -101,7 +108,7 @@ export default function Rythme() {
   }, [phase, frapper])
 
   return (
-    <CadreExercice titre="Le rythme" emoji="🥁" serie={serie} total={RYTHMES_PAR_SERIE}>
+    <CadreExercice titre="Le rythme" emoji="🥁" serie={serie}>
       <Carte teinte="rose" className="mb-5">
         <Portee
           notes={question.evenements.map((e) => ({
