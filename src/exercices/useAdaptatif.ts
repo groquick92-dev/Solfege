@@ -11,7 +11,7 @@
  * l'adaptation s'applique à la suivante.
  */
 
-import { useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import {
   type CleMaitrise,
   cleIntervalle,
@@ -22,24 +22,29 @@ import {
 import type { PoidsParIntervalle, PoidsParMidi } from '../music/generateurs'
 import type { Cle } from '../music/theory'
 
+/**
+ * Lit la maîtrise une seule fois, sans s'abonner au magasin.
+ *
+ * S'y abonner ferait re-rendre l'exercice à chaque écriture de progression
+ * pour une valeur qu'on fige de toute façon — et l'écriture a justement lieu
+ * en fin de série, au pire moment.
+ */
+function maitriseFigee() {
+  return useProgression.getState().maitrise
+}
+
 /** Fonction de poids pour la lecture de notes dans une clé donnée. */
 export function usePoidsNotes(cle: Cle): PoidsParMidi {
-  const maitrise = useProgression((etat) => etat.maitrise)
-  const instantane = useRef(maitrise)
-
   return useMemo(() => {
-    const figee = instantane.current
+    const figee = maitriseFigee()
     return (midi: number) => poidsMaitrise(figee[cleNote(cle, midi)])
   }, [cle])
 }
 
 /** Fonction de poids pour les intervalles. */
 export function usePoidsIntervalles(): PoidsParIntervalle {
-  const maitrise = useProgression((etat) => etat.maitrise)
-  const instantane = useRef(maitrise)
-
   return useMemo(() => {
-    const figee = instantane.current
+    const figee = maitriseFigee()
     return (nom: string) => poidsMaitrise(figee[cleIntervalle(nom)])
   }, [])
 }

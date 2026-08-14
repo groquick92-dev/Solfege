@@ -8,6 +8,7 @@
  */
 
 import clsx from 'clsx'
+import { Link } from 'react-router-dom'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 
 export type TeinteBouton = 'menthe' | 'peche' | 'lavande' | 'ciel' | 'soleil' | 'neutre'
@@ -69,6 +70,49 @@ export function Bouton({
       {icone}
       {children}
     </button>
+  )
+}
+
+/**
+ * Lien présenté comme un bouton.
+ *
+ * Indispensable pour éviter d'imbriquer un `<a>` dans un `<button>` : le HTML
+ * l'interdit, et le rendu est bancal à l'usage — la zone cliquable ne couvre
+ * que le texte, et le clavier s'arrête deux fois pour une seule action.
+ */
+export function BoutonLien({
+  vers,
+  teinte = 'menthe',
+  taille = 'moyen',
+  pleineLargeur = false,
+  icone,
+  className,
+  children,
+}: {
+  vers: string
+  teinte?: TeinteBouton
+  taille?: TailleBouton
+  pleineLargeur?: boolean
+  icone?: ReactNode
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <Link
+      to={vers}
+      className={clsx(
+        'font-titre font-bold inline-flex items-center justify-center gap-2',
+        'transition-all duration-100 ease-out sans-selection no-underline',
+        'active:translate-y-[3px] active:shadow-none',
+        TEINTES[teinte],
+        TAILLES[taille],
+        pleineLargeur && 'w-full',
+        className,
+      )}
+    >
+      {icone}
+      {children}
+    </Link>
   )
 }
 

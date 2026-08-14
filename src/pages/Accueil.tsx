@@ -2,13 +2,12 @@
  * Écran d'accueil : le parcours complet, module par module.
  */
 
-import { Link } from 'react-router-dom'
 import { MODULES, activiteDebloquee } from '../content/programme'
 import { COURS } from '../content/cours'
 import { useProgression, useTotalEtoiles } from '../store/progression'
 import { Carte, CarteLien, Page } from '../ui/Carte'
 import { Etoiles, Pastille, Serie } from '../ui/Retour'
-import { Bouton } from '../ui/Bouton'
+import { BoutonLien } from '../ui/Bouton'
 
 export default function Accueil() {
   const { prenom, avatar, resultats, coursLus, serie } = useProgression()
@@ -43,9 +42,9 @@ export default function Accueil() {
             <p className="mb-3">
               Dis-moi comment tu t’appelles, et choisis ton animal préféré !
             </p>
-            <Bouton teinte="soleil" taille="petit">
-              <Link to="/profil">Créer mon profil</Link>
-            </Bouton>
+            <BoutonLien vers="/profil" teinte="soleil" taille="petit">
+              Créer mon profil
+            </BoutonLien>
           </Carte>
         )}
       </header>

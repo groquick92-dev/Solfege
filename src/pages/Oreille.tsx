@@ -8,7 +8,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { CadreExercice, useSerie } from '../exercices/CadreExercice'
+import { CadreExercice, useDelai, useSerie } from '../exercices/CadreExercice'
 import { usePoidsIntervalles } from '../exercices/useAdaptatif'
 import { Bouton, BoutonReponse } from '../ui/Bouton'
 import { Carte } from '../ui/Carte'
@@ -34,13 +34,14 @@ export default function Oreille() {
   })
 
   const question = serie.question
+  const differer = useDelai()
   const [choix, setChoix] = useState<string | null>(null)
   const [ecoute, setEcoute] = useState(false)
 
   const jouer = useCallback(async (q: QuestionIntervalle) => {
     setEcoute(true)
     await jouerIntervalle(q.depart, q.arrivee)
-    window.setTimeout(() => setEcoute(false), 2200)
+    differer(() => setEcoute(false), 2200)
   }, [])
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function Oreille() {
     setChoix(nom)
     const juste = nom === question.intervalle.nom
 
-    window.setTimeout(
+    differer(
       () =>
         serie.repondre(juste, {
           attendue: question.intervalle.nom,

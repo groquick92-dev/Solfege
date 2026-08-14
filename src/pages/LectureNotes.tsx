@@ -11,7 +11,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { CadreExercice, useSerie } from '../exercices/CadreExercice'
+import { CadreExercice, useDelai, useSerie } from '../exercices/CadreExercice'
 import { usePoidsNotes } from '../exercices/useAdaptatif'
 import { Portee } from '../notation/Portee'
 import { BoutonReponse } from '../ui/Bouton'
@@ -41,6 +41,7 @@ export default function LectureNotes() {
   })
 
   const question = serie.question
+  const differer = useDelai()
   const [choix, setChoix] = useState<string | null>(null)
 
   // Une nouvelle question efface la réponse précédente.
@@ -55,7 +56,7 @@ export default function LectureNotes() {
 
     // Un temps d'arrêt laisse à l'enfant le temps de voir la correction et
     // d'entendre la note avant que l'écran ne change.
-    window.setTimeout(
+    differer(
       () =>
         serie.repondre(juste, {
           attendue: question.reponse,

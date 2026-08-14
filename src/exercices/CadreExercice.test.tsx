@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
-import { useSerie } from './CadreExercice'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { useDelai, useSerie } from './CadreExercice'
 import { useProgression } from '../store/progression'
 
 /** Question factice : un simple numéro, suffisant pour suivre le déroulé. */
@@ -17,6 +17,60 @@ beforeEach(() => {
     dernierJour: null,
     serie: 0,
     maitrise: {},
+  })
+})
+
+describe('actions différées', () => {
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => vi.useRealTimers())
+
+  it('exécute l’action après le délai', () => {
+    const action = vi.fn()
+    const { result } = renderHook(() => useDelai())
+
+    act(() => result.current(action, 1000))
+    expect(action).not.toHaveBeenCalled()
+
+    act(() => void vi.advanceTimersByTime(1000))
+    expect(action).toHaveBeenCalledOnce()
+  })
+
+  it('annule les actions en attente au démontage', () => {
+    // Un enfant qui appuie sur « Quitter » pendant la pause de correction ne
+    // doit pas voir sa réponse comptée après coup.
+    const action = vi.fn()
+    const { result, unmount } = renderHook(() => useDelai())
+
+    act(() => result.current(action, 1000))
+    unmount()
+    act(() => void vi.advanceTimersByTime(5000))
+
+    expect(action).not.toHaveBeenCalled()
+  })
+
+  it('annule toutes les actions en attente, pas seulement la dernière', () => {
+    const premiere = vi.fn()
+    const seconde = vi.fn()
+    const { result, unmount } = renderHook(() => useDelai())
+
+    act(() => {
+      result.current(premiere, 500)
+      result.current(seconde, 1500)
+    })
+    unmount()
+    act(() => void vi.advanceTimersByTime(5000))
+
+    expect(premiere).not.toHaveBeenCalled()
+    expect(seconde).not.toHaveBeenCalled()
+  })
+
+  it('garde la même fonction d’un rendu à l’autre', () => {
+    // Elle est utilisée dans des useCallback : une identité changeante les
+    // ferait tous se recréer à chaque rendu.
+    const { result, rerender } = renderHook(() => useDelai())
+    const premiere = result.current
+    rerender()
+    expect(result.current).toBe(premiere)
   })
 })
 

@@ -10,7 +10,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { CadreExercice, useSerie } from '../exercices/CadreExercice'
+import { CadreExercice, useDelai, useSerie } from '../exercices/CadreExercice'
 import { Bouton } from '../ui/Bouton'
 import { Carte } from '../ui/Carte'
 import { Retour } from '../ui/Retour'
@@ -35,6 +35,7 @@ export default function DicteeRythme() {
   const serie = useSerie(`dictee-rythme-${niveau}`, DICTEES_PAR_SERIE, generer)
 
   const question = serie.question
+  const differer = useDelai()
   const capacite = tempsParMesure(question.mesure)
 
   const [saisie, setSaisie] = useState<string[]>([])
@@ -45,7 +46,7 @@ export default function DicteeRythme() {
     async (temps: number[]) => {
       setEcoute(true)
       await jouerRythme(temps, tempo)
-      window.setTimeout(() => setEcoute(false), ((capacite + 1) * 60_000) / tempo)
+      differer(() => setEcoute(false), ((capacite + 1) * 60_000) / tempo)
     },
     [tempo, capacite],
   )
@@ -83,7 +84,7 @@ export default function DicteeRythme() {
     const justes = saisie.filter((id, i) => id === attendue[i]).length
     const part = attendue.length > 0 ? justes / attendue.length : 0
 
-    window.setTimeout(
+    differer(
       () =>
         serie.repondrePartiel(part, {
           attendue: question.cellules.map((c) => c.parle).join(' — '),

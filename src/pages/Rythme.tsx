@@ -9,7 +9,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { CadreExercice, useSerie } from '../exercices/CadreExercice'
+import { CadreExercice, useDelai, useSerie } from '../exercices/CadreExercice'
 import { Bouton } from '../ui/Bouton'
 import { Carte } from '../ui/Carte'
 import { Retour } from '../ui/Retour'
@@ -36,6 +36,7 @@ export default function Rythme() {
   const serie = useSerie(`rythme-${niveau - 1}`, RYTHMES_PAR_SERIE, generer)
 
   const question = serie.question
+  const differer = useDelai()
   const [phase, setPhase] = useState<Phase>('attente')
   const [score, setScore] = useState(0)
 
@@ -54,7 +55,7 @@ export default function Rythme() {
     const attendus = frappes(question.evenements)
     await jouerRythme(attendus, tempo)
     const duree = ((question.duree + 0.5) * 60000) / tempo
-    window.setTimeout(() => setPhase('attente'), duree)
+    differer(() => setPhase('attente'), duree)
   }, [question, tempo])
 
   const commencer = useCallback(async () => {
@@ -70,13 +71,13 @@ export default function Rythme() {
     // La fenêtre de frappe dépasse d'un temps la fin du rythme : une dernière
     // note frappée juste après la barre reste comptée.
     const duree = ((question.duree + 1) * 60000) / tempo
-    window.setTimeout(() => {
+    differer(() => {
       const attendus = frappes(question.evenements)
       const resultats = evaluerFrappes(attendus, frappesRef.current)
       const obtenu = scoreFrappes(resultats)
       setScore(obtenu)
       setPhase('bilan')
-      window.setTimeout(
+      differer(
         () =>
           serie.repondrePartiel(obtenu / 100, {
             attendue: `${question.cellules.map((c) => c.parle).join(' ')} — précision ${obtenu} %`,

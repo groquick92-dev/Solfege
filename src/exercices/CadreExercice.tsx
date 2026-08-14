@@ -71,6 +71,77 @@ export interface OptionsSerie<Q> {
 }
 
 /**
+ * Programme une action différée, annulée si l'écran est quitté entre-temps.
+ *
+ * Les exercices marquent une pause avant de passer à la question suivante,
+ * pour laisser voir la correction. Sans annulation, un enfant qui appuie sur
+ * « Quitter » pendant cette pause verrait quand même sa réponse comptée et le
+ * résultat enregistré, une fois l'écran déjà refermé.
+ */
+export function useDelai() {
+  const minuteurs = useRef<number[]>([])
+
+  useEffect(
+    () => () => {
+      for (const minuteur of minuteurs.current) window.clearTimeout(minuteur)
+      minuteurs.current = []
+    },
+    [],
+  )
+
+  return useMemo(
+    () => (action: () => void, millisecondes: number) => {
+      minuteurs.current.push(window.setTimeout(action, millisecondes))
+    },
+    [],
+  )
+}
+
+/**
+ * Chronomètre qui se fige quand l'onglet passe en arrière-plan.
+ *
+ * Sans cela, une tablette laissée ouverte toute la nuit compterait huit
+ * heures de travail et rendrait le bilan destiné aux parents inutilisable.
+ */
+function useTempsActif() {
+  const cumul = useRef(0)
+  const depuis = useRef<number | null>(null)
+
+  useEffect(() => {
+    // Le décompte démarre au montage, et seulement si l'onglet est visible :
+    // un exercice ouvert dans un onglet d'arrière-plan ne compte pas.
+    depuis.current = document.hidden ? null : Date.now()
+
+    const surChangement = () => {
+      if (document.hidden) {
+        if (depuis.current !== null) {
+          cumul.current += Date.now() - depuis.current
+          depuis.current = null
+        }
+      } else {
+        depuis.current = Date.now()
+      }
+    }
+
+    document.addEventListener('visibilitychange', surChangement)
+    return () => document.removeEventListener('visibilitychange', surChangement)
+  }, [])
+
+  return useMemo(
+    () => ({
+      /** Secondes actives écoulées depuis la dernière remise à zéro. */
+      lire: () =>
+        (cumul.current + (depuis.current === null ? 0 : Date.now() - depuis.current)) / 1000,
+      reinitialiser: () => {
+        cumul.current = 0
+        depuis.current = document.hidden ? null : Date.now()
+      },
+    }),
+    [],
+  )
+}
+
+/**
  * Gère le déroulé d'une série.
  *
  * `repondrePartiel` sert aux exercices dont une réponse n'est pas simplement
@@ -101,7 +172,7 @@ export function useSerie<Q>(
   const [erreurs, setErreurs] = useState<Erreur<Q>[]>([])
   const [fileRevision, setFileRevision] = useState<Q[] | null>(null)
 
-  const debut = useRef(Date.now())
+  const chrono = useTempsActif()
   const reponses = useRef<{ cle: CleMaitrise; juste: boolean }[]>([])
 
   const total = fileRevision?.length ?? totalDemande
@@ -124,7 +195,7 @@ export function useSerie<Q>(
 
       if (indice + 1 >= total) {
         const score = Math.round((nouveauxPoints / total) * 100)
-        const secondes = (Date.now() - debut.current) / 1000
+        const secondes = chrono.lire()
 
         // Une reprise d'erreurs n'écrase pas le résultat de l'activité : elle
         // porte sur une poignée de questions choisies, et gonflerait
@@ -144,6 +215,7 @@ export function useSerie<Q>(
     },
     [
       activiteId,
+      chrono,
       enregistrerResultat,
       enregistrerReponses,
       erreurs,
@@ -166,9 +238,9 @@ export function useSerie<Q>(
       setErreurs([])
       setTerminee(false)
       reponses.current = []
-      debut.current = Date.now()
+      chrono.reinitialiser()
     },
-    [],
+    [chrono],
   )
 
   return {
@@ -396,35 +468,3 @@ function regrouperErreurs<Q>(erreurs: Erreur<Q>[]): GroupeErreur<Q>[] {
   return [...groupes.values()].sort((a, b) => b.occurrences - a.occurrences)
 }
 
-/**
- * Mesure le temps réellement passé sur un écran.
- *
- * Le compteur se fige quand l'onglet passe en arrière-plan : sans cela, une
- * tablette laissée ouverte toute la nuit compterait huit heures de travail et
- * rendrait le bilan destiné aux parents inutilisable.
- */
-export function useTempsActif(): () => number {
-  const cumul = useRef(0)
-  const depuis = useRef<number | null>(Date.now())
-
-  useEffect(() => {
-    const surChangement = () => {
-      if (document.hidden) {
-        if (depuis.current !== null) {
-          cumul.current += Date.now() - depuis.current
-          depuis.current = null
-        }
-      } else {
-        depuis.current = Date.now()
-      }
-    }
-
-    document.addEventListener('visibilitychange', surChangement)
-    return () => document.removeEventListener('visibilitychange', surChangement)
-  }, [])
-
-  return useMemo(
-    () => () => (cumul.current + (depuis.current ? Date.now() - depuis.current : 0)) / 1000,
-    [],
-  )
-}

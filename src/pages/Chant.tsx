@@ -11,7 +11,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CadreExercice, useSerie } from '../exercices/CadreExercice'
+import { CadreExercice, useDelai, useSerie } from '../exercices/CadreExercice'
 import { Bouton } from '../ui/Bouton'
 import { Carte } from '../ui/Carte'
 import { Retour } from '../ui/Retour'
@@ -34,6 +34,7 @@ export default function Chant() {
   const serie = useSerie('chant-0', NOTES_PAR_SERIE, generer)
 
   const cible = serie.question
+  const differer = useDelai()
   const [mesure, setMesure] = useState<MesureHauteur | null>(null)
   const [ecouteActive, setEcouteActive] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
@@ -72,7 +73,7 @@ export default function Chant() {
       debutJusteRef.current ??= performance.now()
       if (performance.now() - debutJusteRef.current >= DUREE_TENUE) {
         setReussi(true)
-        window.setTimeout(() => serie.repondre(true), 1600)
+        differer(() => serie.repondre(true), 1600)
       }
     },
     [cible, reussi, serie],

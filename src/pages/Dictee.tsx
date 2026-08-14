@@ -8,7 +8,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { CadreExercice, useSerie } from '../exercices/CadreExercice'
+import { CadreExercice, useDelai, useSerie } from '../exercices/CadreExercice'
 import { Bouton, BoutonReponse } from '../ui/Bouton'
 import { Carte } from '../ui/Carte'
 import { Retour } from '../ui/Retour'
@@ -29,6 +29,7 @@ export default function Dictee() {
   const serie = useSerie(`dictee-${palier}`, DICTEES_PAR_SERIE, generer)
 
   const question = serie.question
+  const differer = useDelai()
   const [saisie, setSaisie] = useState<number[]>([])
   const [validee, setValidee] = useState(false)
   const [ecoute, setEcoute] = useState(false)
@@ -36,7 +37,7 @@ export default function Dictee() {
   const jouer = useCallback(async (melodie: number[]) => {
     setEcoute(true)
     await jouerMelodie(melodie, { pas: 0.65 })
-    window.setTimeout(() => setEcoute(false), melodie.length * 650 + 300)
+    differer(() => setEcoute(false), melodie.length * 650 + 300)
   }, [])
 
   useEffect(() => {
@@ -64,7 +65,7 @@ export default function Dictee() {
 
     // La dictée est notée en proportion : retrouver quatre notes sur cinq est
     // un vrai résultat, qu'un tout-ou-rien effacerait.
-    window.setTimeout(
+    differer(
       () =>
         serie.repondrePartiel(part, {
           attendue: question.notes.map((m) => nomFrancais(midiVersNote(m))).join(' '),

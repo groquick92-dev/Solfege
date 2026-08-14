@@ -7,7 +7,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { COURS, coursParId } from '../content/cours'
 import { useProgression } from '../store/progression'
 import { Carte, Page } from '../ui/Carte'
-import { Bouton } from '../ui/Bouton'
+import { BoutonLien } from '../ui/Bouton'
 
 export default function PageCours() {
   const { id } = useParams()
@@ -51,16 +51,16 @@ export default function PageCours() {
 
       <nav className="flex justify-between gap-3 mt-6" aria-label="Navigation entre les leçons">
         {precedent ? (
-          <Bouton teinte="neutre" taille="petit">
-            <Link to={`/cours/${precedent.id}`}>← {precedent.titre}</Link>
-          </Bouton>
+          <BoutonLien vers={`/cours/${precedent.id}`} teinte="neutre" taille="petit">
+            ← {precedent.titre}
+          </BoutonLien>
         ) : (
           <span />
         )}
         {suivant && (
-          <Bouton teinte="lavande" taille="petit">
-            <Link to={`/cours/${suivant.id}`}>{suivant.titre} →</Link>
-          </Bouton>
+          <BoutonLien vers={`/cours/${suivant.id}`} teinte="lavande" taille="petit">
+            {suivant.titre} →
+          </BoutonLien>
         )}
       </nav>
     </Page>
